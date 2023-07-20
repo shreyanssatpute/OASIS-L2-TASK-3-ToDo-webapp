@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>To-Do App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #5a659e;
+      margin: 0;
+      padding: 20px;
+      font-family: 'Courier New', Courier, monospacex;
+    }
+    .f{
+      font-size: medium;
+      font-family: 'Courier New', Courier, monospace;
+      width: 50%;
+      display: flex;
+      justify-content: center;
+      margin: 0 auto;
+
+        
+        
+    }
+    
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 30px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #D1D3E0;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      min-height: 83vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .task-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    .task-item:hover {
+      background-color: #f1f1f1;
+    }
+    
+    .task-item span {
+      font-size: 18px;
+      color: #333;
+      margin-left: 10px;
+    }
+    
+    .task-item .timestamp {
+      font-size: 12px;
+      color: #888;
+    }
+    .hea{
+      font-size: 40px;
+      font-weight: bold;
+    }
+    
+    .completed {
+      text-decoration: line-through;
+      color: #888;
+    }
+    
+    .actions {
+      display: flex;
+    }
+    
+    .actions button {
+      margin-left: 5px;
+      padding: 5px 10px;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    .actions button:hover {
+      background-color: #555;
+    }
+    
+    .task-input {
+      display: flex;
+      margin-bottom: 20px;
+    }
+    
+    .task-input input[type="text"] {
+      flex-grow: 1;
+      padding: 5px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+    }
+    
+    .task-input button {
+      margin-left: 10px;
+      padding: 5px 10px;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    .task-input button:hover {
+      background-color: #555;
+    }
+    
+    /* Add scrollbar to the task lists */
+    #pendingList,
+    #completedList {
+      overflow-y: auto;
+      max-height: 60vh; /* Adjust the height as needed */
+    }
+
+    #pendingCount,
+    #completedCount {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #888;
+    }
+
+    #clearButton {
+      margin-top: 10px;
+      padding: 5px 10px;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #clearButton:hover {
+      background-color: #555;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="hea">TaskIt</h1>
+    <br>
+    <br>
+    <div class="task-input">
+      <input type="text" id="taskInput" placeholder="Enter a task .. ">
+      <button id="addButton">+</button>
+    </div>
+    <br>
+
+    <div id="pendingCount"></div>
+    <div>
+      <h2>Pending Tasks:</h2>
+      <ul id="pendingList"></ul>
+    </div>
+    
+    <div id="completedCount"></div>
+    <div>
+      <h2>Completed Tasks:</h2>
+      <ul id="completedList"></ul>
+    </div>
+    <br>
+    <br>
+    <button class="f" id="clearButton">Clear all Completed</button>
+  </div>
+
+  <script>
+    const taskInput = document.getElementById('taskInput');
+    const addButton = document.getElementById('addButton');
+    const pendingList = document.getElementById('pendingList');
+    const completedList = document.getElementById('completedList');
+    const pendingCount = document.getElementById('pendingCount');
+    const completedCount = document.getElementById('completedCount');
+    const clearButton = document.getElementById('clearButton');
+
+    // Load tasks from local storage on page load
+    window.addEventListener('load', loadTasksFromLocalStorage);
+
+    // Add a new task
+    function addTask() {
+      const taskText = taskInput.value.trim();
+      if (taskText !== '') {
+        const timestamp = new Date().toLocaleString();
+        const taskItem = createTaskItem(taskText, timestamp);
+        pendingList.appendChild(taskItem);
+        taskInput.value = '';
+        updateTaskCount();
+        saveTasksToLocalStorage();
+      }
+    }
+
+    // Create a new task item
+    function createTaskItem(text, timestamp) {
+      const taskItem = document.createElement('li');
+      taskItem.classList.add('task-item');
+      const taskText = document.createElement('span');
+      taskText.textContent = text;
+      const taskTimestamp = document.createElement('span');
+      taskTimestamp.classList.add('timestamp');
+      taskTimestamp.textContent = timestamp;
+      const actions = document.createElement('div');
+      actions.classList.add('actions');
+      const completeButton = createActionButton('Complete', completeTask);
+      const editButton = createActionButton('Edit', editTask);
+      const deleteButton = createActionButton('X', deleteTask);
+      actions.appendChild(completeButton);
+      actions.appendChild(editButton);
+      actions.appendChild(deleteButton);
+      taskItem.appendChild(taskText);
+      taskItem.appendChild(taskTimestamp);
+      taskItem.appendChild(actions);
+      return taskItem;
+    }
+
+    // Create an action button
+    function createActionButton(text, action) {
+      const button = document.createElement('button');
+      button.textContent = text;
+      button.addEventListener('click', action);
+      return button;
+    }
+
+    // Mark a task as complete
+    function completeTask(event) {
+      const taskItem = event.target.parentNode.parentNode;
+      const timestamp = new Date().toLocaleString();
+      const completedTaskItem = createTaskItem(taskItem.firstChild.textContent, timestamp);
+      completedTaskItem.firstChild.classList.add('completed');
+      completedList.appendChild(completedTaskItem);
+      taskItem.remove();
+      updateTaskCount();
+      saveTasksToLocalStorage();
+    }
+
+    // Edit a task
+    function editTask(event) {
+      const taskItem = event.target.parentNode.parentNode;
+      const taskText = taskItem.firstChild;
+      const newText = prompt('Enter a new task:', taskText.textContent);
+      if (newText !== null && newText.trim() !== '') {
+        taskText.textContent = newText;
+updateTaskCount();
+        saveTasksToLocalStorage();
+      }
+    }
+
+    // Delete a task
+    function deleteTask(event) {
+      const taskItem = event.target.parentNode.parentNode;
+      taskItem.remove();
+      updateTaskCount();
+      saveTasksToLocalStorage();
+    }
+
+    // Update the task counts
+    function updateTaskCount() {
+      const pendingTaskCount = pendingList.children.length;
+      const completedTaskCount = completedList.children.length;
+      pendingCount.textContent = `Pending Tasks: ${pendingTaskCount}`;
+      completedCount.textContent = `Completed Tasks: ${completedTaskCount}`;
+    }
+
+    // Clear completed tasks
+    function clearCompletedTasks() {
+      completedList.innerHTML = '';
+      updateTaskCount();
+      saveTasksToLocalStorage();
+    }
+
+    // Add event listener to the add button
+    addButton.addEventListener('click', addTask);
+
+    // Add event listener to the task input for Enter key press
+    taskInput.addEventListener('keypress', function(event) {
+      if (event.key === 'Enter') {
+        addTask();
+      }
+    });
+
+    // Add event listeners to task items for marking as complete
+    const taskItems = document.querySelectorAll('.task-item');
+    taskItems.forEach(function(taskItem) {
+      taskItem.addEventListener('click', function() {
+        const isCompleted = taskItem.classList.contains('completed');
+        if (isCompleted) {
+          taskItem.classList.remove('completed');
+          pendingList.appendChild(taskItem);
+        } else {
+          taskItem.classList.add('completed');
+          completedList.appendChild(taskItem);
+        }
+        updateTaskCount();
+        saveTasksToLocalStorage();
+      });
+    });
+
+    // Add event listener to the clear button
+    clearButton.addEventListener('click', clearCompletedTasks);
+
+    // Load tasks from local storage
+    function loadTasksFromLocalStorage() {
+      const pendingTasks = JSON.parse(localStorage.getItem('pendingTasks')) || [];
+      const completedTasks = JSON.parse(localStorage.getItem('completedTasks')) || [];
+
+      pendingTasks.forEach(function(task) {
+        const taskItem = createTaskItem(task.text, task.timestamp);
+        pendingList.appendChild(taskItem);
+      });
+
+      completedTasks.forEach(function(task) {
+        const taskItem = createTaskItem(task.text, task.timestamp);
+        taskItem.firstChild.classList.add('completed');
+        completedList.appendChild(taskItem);
+      });
+
+      updateTaskCount();
+    }
+
+    // Save tasks to local storage
+    function saveTasksToLocalStorage() {
+      const pendingTasks = Array.from(pendingList.children).map(function(taskItem) {
+        return {
+          text: taskItem.firstChild.textContent,
+          timestamp: taskItem.children[1].textContent
+        };
+      });
+
+      const completedTasks = Array.from(completedList.children).map(function(taskItem) {
+        return {
+          text: taskItem.firstChild.textContent,
+          timestamp: taskItem.children[1].textContent
+        };
+      });
+
+      localStorage.setItem('pendingTasks', JSON.stringify(pendingTasks));
+      localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+    }
+  </script>
+</body>
+</html>
